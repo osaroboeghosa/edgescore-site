@@ -22,8 +22,8 @@ h1{font-size:22px;margin:0 0 4px}
 <div class="sub" id="s">Loading...</div>
 <div id="o"></div>
 <script>
-const U="https://pblxrchnfdenydbqqetu.supabase.co/rest/v1/top_setups?select=*&order=score.desc";
-const K="sb_publishable_7ZNlwS4_Kx4x8FrRg3nWcA_5fw0-XdL";
+const U="https://lveqwyasscpwslqvitbt.supabase.co/rest/v1/top_setups?select=*&order=score.desc";
+const K="sb_publishable_xMyRvBFDAlDyDobfgFekug_gY0tEORR";
 fetch(U,{headers:{apikey:K}}).then(r=>r.json()).then(d=>{
   if(!Array.isArray(d)){document.getElementById("s").textContent="Error: "+JSON.stringify(d);return;}
   const dt=d[0]&&(d[0].as_of||"");
