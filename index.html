@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EdgeScore</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;margin:0;padding:16px;max-width:640px;margin:auto}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:#8b949e;font-size:13px;margin-bottom:14px}
+.row{background:#161b22;border-radius:10px;padding:12px;margin-bottom:8px}
+.top{display:flex;justify-content:space-between;align-items:center}
+.sym{font-weight:700;font-size:17px}
+.sc{font-size:20px;font-weight:700}
+.chip{font-size:12px;padding:3px 8px;border-radius:12px;color:#fff;margin-left:8px}
+.Very-Bullish{background:#0a7d3b}.Bullish{background:#3fa35b}.Neutral{background:#6e7681}
+.Bearish{background:#c9503c}.Very-Bearish{background:#a11d1d}
+.comp{display:none;margin-top:10px;font-size:13px;color:#c9d1d9}
+.comp span{display:inline-block;width:48%;padding:2px 0}
+.pos{color:#3fb950}.neg{color:#f85149}
+</style></head><body>
+<h1>EdgeScore</h1>
+<div class="sub" id="s">Loading...</div>
+<div id="o"></div>
+<script>
+const U="https://pblxrchnfdenydbqqetu.supabase.co/rest/v1/top_setups?select=*&order=score.desc";
+const K="sb_publishable_7ZNlwS4_Kx4x8FrRg3nWcA_5fw0-XdL";
+fetch(U,{headers:{apikey:K}}).then(r=>r.json()).then(d=>{
+  if(!Array.isArray(d)){document.getElementById("s").textContent="Error: "+JSON.stringify(d);return;}
+  const dt=d[0]&&(d[0].as_of||"");
+  document.getElementById("s").textContent="Top setups"+(dt?" - as of "+dt:"");
+  document.getElementById("o").innerHTML=d.map(x=>{
+    let c=x.components;if(typeof c==="string"){try{c=JSON.parse(c)}catch(e){c={}}}
+    c=c||{};
+    const cs=Object.keys(c).map(k=>'<span>'+k+': <b class="'+(c[k]>0?'pos':c[k]<0?'neg':'')+'">'+(c[k]>0?'+':'')+c[k]+'</b></span>').join("");
+    return '<div class="row" onclick="this.querySelector(\'.comp\').style.display=\'block\'">'
+      +'<div class="top"><div><span class="sym">'+x.symbol+'</span><span class="chip '+String(x.bias).replace(/ /g,"-")+'">'+x.bias+'</span></div>'
+      +'<div class="sc">'+(x.score>0?'+':'')+x.score+'</div></div>'
+      +'<div class="comp">'+cs+'</div></div>';
+  }).join("");
+}).catch(e=>{document.getElementById("s").textContent="Error: "+e});
+</script></body></html>
