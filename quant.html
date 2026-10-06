@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EdgeScore - Quant Hybrid</title>
+<style>
+body{margin:0;background:#0b1120;color:#e6e9f0;font:14px/1.45 system-ui,Segoe UI,Roboto,sans-serif;padding:16px}
+a{color:#4f8cff}
+h1{font-size:20px;margin:0 0 2px}
+.sub{color:#8b93a7;font-size:12px;margin-bottom:12px}
+.tabs{display:flex;gap:6px;margin:10px 0 14px}
+.tabs a{padding:8px 14px;border:1px solid #2a3350;border-radius:6px;color:#e6e9f0;text-decoration:none;opacity:.75}
+.tabs a.on{background:#3b3fd4;border-color:#3b3fd4;opacity:1}
+.w{overflow-x:auto;border:1px solid #1f2740;border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:700px;font-size:13px}
+th,td{padding:8px 6px;text-align:center;border-bottom:1px solid #1f2740;white-space:nowrap}
+th{background:#121a30;color:#8b93a7;font-weight:500}
+td.s{text-align:left;font-weight:600;padding-left:10px}
+.p{background:#1f8a4c;color:#fff}.n{background:#c0392b;color:#fff}.z{background:#2a3350}
+.note{color:#8b93a7;font-size:12px;margin-top:12px}
+</style></head><body>
+<h1>EdgeScore</h1>
+<div class="sub" id="asof">Quant Hybrid Engine</div>
+<div class="tabs"><a href="index.html">Classic Matrix</a><a class="on" href="quant.html">Quant Hybrid Engine</a></div>
+<div class="w"><table id="t"><tr><td>Loading...</td></tr></table></div>
+<div class="note">Score = weighted components (-100 to +100) x price-gate multiplier (0.3 to 1.0). Coverage = share of the model that has data. A dash means no data yet. Model output, not financial advice.</div>
+<script>
+// Copy these two values from your existing index.html (the same ones it already uses).
+const SB_URL = "https://YOURPROJECT.supabase.co";
+const SB_KEY = "YOUR_PUBLISHABLE_KEY"; // publishable/anon key only, NEVER the secret key
+const K = ["carry","esi","pmi","vix","cot","retail"];
+const cls = v => v > 0 ? "p" : v < 0 ? "n" : "z";
+const esc = s => String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+fetch(SB_URL + "/rest/v1/quant_latest?order=score.desc", {headers:{apikey:SB_KEY}})
+  .then(r => r.json()).then(d => {
+    if (!Array.isArray(d) || !d.length) { document.getElementById("t").innerHTML = "<tr><td>No quant data yet. Run the workflow once.</td></tr>"; return; }
+    document.getElementById("asof").textContent = "Quant Hybrid Engine - as of " + d[0].as_of;
+    let h = "<tr><th>Symbol</th><th>Score</th><th>Raw</th><th>Gate x</th><th>COT regime</th><th>Coverage</th>" + K.map(k => "<th>" + k + "</th>").join("") + "</tr>";
+    d.forEach(x => {
+      h += "<tr><td class='s'>" + esc(x.symbol) + "</td><td class='" + cls(x.score) + "'>" + Number(x.score).toFixed(2) + "</td><td>" + Number(x.raw_score).toFixed(1) + "</td><td>" + x.gate + "</td><td>" + esc(x.cot_regime) + "</td><td>" + x.coverage + "%</td>" +
+        K.map(k => { const v = x.components ? x.components[k] : null; return v == null ? "<td>-</td>" : "<td class='" + cls(v) + "'>" + v.toFixed(2) + "</td>"; }).join("") + "</tr>";
+    });
+    document.getElementById("t").innerHTML = h;
+  }).catch(() => { document.getElementById("t").innerHTML = "<tr><td>Could not load data. Check the URL and key above.</td></tr>"; });
+</script>
+</body></html>
