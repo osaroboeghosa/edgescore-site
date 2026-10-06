@@ -12,29 +12,50 @@ a{color:#58a6ff}
 table{border-collapse:separate;border-spacing:2px;font-size:12px}
 th{color:#8b949e;font-weight:600;padding:4px 0;min-width:36px}
 td{text-align:center;height:30px;border-radius:4px;font-weight:700}
-td.s{text-align:left;position:sticky;left:0;background:#0d1117;padding-right:8px;font-size:13px;z-index:1}
-.b2{background:#0a7d3b}.b1{background:#2e6b45}.b0{background:#222a35;color:#8b949e}.m1{background:#8a3a2e}.m2{background:#a11d1d}
+td.s{text-align:left;position:sticky;left:0;background:#0d1117;padding-right:8px;font-size:13px}
+.b2{background:#0a7d3b}
+.b1{background:#2e6b45}
+.b0{background:#222a35;color:#8b949e}
+.m1{background:#8a3a2e}
+.m2{background:#a11d1d}
 </style></head><body>
 <h1>Heatmap</h1>
 <div class="sub" id="s">Loading...</div>
 <div class="wrap"><table id="t"></table></div>
 <p><a href="index.html">Back to list</a></p>
 <script>
-const U="https://lveqwyasscpwslqvitbt.supabase.co/rest/v1/top_setups?select=*&order=score.desc";
-const K="sb_publishable_xMyRvBFDAlDyDobfgFekug_gY0tEORR";
-const C=["trend","seasonality","cot","crowd","gdp","mpmi","spmi","retail","cnsmr","cpi","ppi","pce","rates","nfp","unemp","claims","adp","jolts"];
-const L=["TRD","SEA","COT","CRD","GDP","MPM","SPM","RET","CNS","CPI","PPI","PCE","RTE","NFP","UNE","CLM","ADP","JOL"];
-const cl=v=>v>=2?"b2":v==1?"b1":v==0?"b0":v==-1?"m1":"m2";
-fetch(U,{headers:{apikey:K}}).then(r=>r.json()).then(d=>{
+window.onerror=function(m){document.getElementById("s").textContent="Script error: "+m;};
+var U="https://lveqwyasscpwslqvitbt.supabase.co/rest/v1/top_setups?select=*&order=score.desc";
+var K="sb_publishable_xMyRvBFDAlDyDobfgFekug_gY0tEORR";
+var C=["trend","seasonality","cot","crowd","gdp","mpmi","spmi","retail","cnsmr","cpi","ppi","pce","rates","nfp","unemp","claims","adp","jolts"];
+var L=["TRD","SEA","COT","CRD","GDP","MPM","SPM","RET","CNS","CPI","PPI","PCE","RTE","NFP","UNE","CLM","ADP","JOL"];
+function cl(v){
+if(v>=2)return "b2";
+if(v==1)return "b1";
+if(v==0)return "b0";
+if(v==-1)return "m1";
+return "m2";
+}
+function sg(v){return v>0?"+"+v:""+v;}
+function row(x){
+var c=x.components;
+if(typeof c==="string"){try{c=JSON.parse(c);}catch(e){c={};}}
+c=c||{};
+var h="<tr><td class='s'>"+x.symbol+"</td>";
+for(var i=0;i<C.length;i++){
+var v=c[C[i]]||0;
+h+="<td class='"+cl(v)+"'>"+sg(v)+"</td>";
+}
+h+="<td class='"+cl(x.score>0?2:x.score<0?-2:0)+"'>"+sg(x.score)+"</td></tr>";
+return h;
+}
+fetch(U,{headers:{apikey:K}}).then(function(r){return r.json();}).then(function(d){
 if(!Array.isArray(d)){document.getElementById("s").textContent="Error: "+JSON.stringify(d);return;}
 document.getElementById("s").textContent="As of "+(d[0]?d[0].as_of:"");
-let h="<tr><th></th>"+L.map(x=>"<th>"+x+"</th>").join("")+"<th>SUM</th></tr>";
-h+=d.map(x=>{
-let c=x.components;
-if(typeof c==="string"){try{c=JSON.parse(c)}catch(e){c={}}}
-c=c||{};
-return "<tr><td class='s'>"+x.symbol+"</td>"+C.map(k=>{const v=c[k]||0;return "<td class='"+cl(v)+"'>"+(v>0?"+":"")+v+"</td>"}).join("")+"<td class='"+(x.score>0?"b2":x.score<0?"m2":"b0")+"'>"+x.score+"</td></tr>";
-}).join("");
+var h="<tr><th></th>";
+for(var i=0;i<L.length;i++){h+="<th>"+L[i]+"</th>";}
+h+="<th>SUM</th></tr>";
+for(var j=0;j<d.length;j++){h+=row(d[j]);}
 document.getElementById("t").innerHTML=h;
-}).catch(e=>{document.getElementById("s").textContent="Error: "+e});
+}).catch(function(e){document.getElementById("s").textContent="Error: "+e;});
 </script></body></html>
