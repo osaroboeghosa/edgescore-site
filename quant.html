@@ -25,8 +25,8 @@ td.s{text-align:left;font-weight:600;padding-left:10px}
 <div class="note">Score = weighted components (-100 to +100) x price-gate multiplier (0.3 to 1.0). Coverage = share of the model that has data. A dash means no data yet. Model output, not financial advice.</div>
 <script>
 // Copy these two values from your existing index.html (the same ones it already uses).
-const SB_URL = "https://YOURPROJECT.supabase.co";
-const SB_KEY = "YOUR_PUBLISHABLE_KEY"; // publishable/anon key only, NEVER the secret key
+const SB_URL = https://lveqwyasscpwslqvitbt.supabase.co/rest/v1/top_setups?select=*&order=score.desc"https://YOURPROJECT.supabase.co";
+const SB_KEY = ="sb_publishable_xMyRvBFDAlDyDobfgFekug_gY0tEORR"YOUR_PUBLISHABLE_KEY"; // publishable/anon key only, NEVER the secret key
 const K = ["carry","esi","pmi","vix","cot","retail"];
 const cls = v => v > 0 ? "p" : v < 0 ? "n" : "z";
 const esc = s => String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
