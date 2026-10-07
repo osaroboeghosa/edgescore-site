@@ -1,0 +1,32 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COT History</title>
+<style>body{margin:0;padding:14px;background:#0a0e1f;color:#e5e7eb;font:14px system-ui,sans-serif}h1{font-size:20px;margin:0 0 4px}.s{color:#8b93a7;font-size:12px;margin-bottom:12px}a{color:#818cf8}select{background:#11162b;color:#e5e7eb;border:1px solid #2a3350;border-radius:6px;padding:8px;font-size:15px;margin-bottom:10px}.k{display:flex;gap:8px;margin:8px 0}.k div{flex:1;background:#11162b;border-radius:8px;padding:8px;text-align:center}.k b{display:block;font-size:16px}.k span{font-size:11px;color:#8b93a7}svg{width:100%;height:auto;background:#11162b;border-radius:8px}.l{font-size:12px;margin:8px 0;color:#8b93a7}.f{color:#8b93a7;font-size:11px;margin-top:12px}</style></head><body>
+<h1>COT History</h1><div class="s">Weekly CFTC positioning. <a href="quant.html">Quant</a> | <a href="econ.html">Economic Heatmap</a> | <a href="index.html">Classic</a></div>
+<select id="sy"></select>
+<div class="k"><div><b id="k1">-</b><span>Net now</span></div><div><b id="k2">-</b><span>Change vs last week</span></div><div><b id="k3">-</b><span>Percentile of history</span></div></div>
+<svg id="c" viewBox="0 0 360 230"></svg>
+<div class="l"><span style="color:#818cf8">&#9644;</span> Net &nbsp;<span style="color:#22c55e">&#9644;</span> Long &nbsp;<span style="color:#ef4444">&#9644;</span> Short</div>
+<div class="f">Net = long minus short positions. Percentile = where the latest net sits within all weeks loaded. DAX and UK100 have no CFTC data. Not financial advice.</div>
+<script>
+const URL_='https://lveqwyasscpwslqvitbt.supabase.co';
+const SYMS=['AUDUSD','COPPER','DOW','EURUSD','GBPUSD','GOLD','NASDAQ','NIKKEI','NZDUSD','PLATINUM','SILVER','SPX500','USDCAD','USDCHF','USDJPY'];
+const sy=document.getElementById('sy'),c=document.getElementById('c');
+const q=new URLSearchParams(location.search).get('symbol');
+SYMS.forEach(s=>{const o=document.createElement('option');o.value=o.textContent=s;if(s===q)o.selected=true;sy.appendChild(o)});
+let hd=null;
+const fmt=v=>Math.abs(v)>=1000?(v/1000).toFixed(0)+'k':String(Math.round(v));
+function path(a,x,y){return a.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ')}
+function draw(rows){
+if(rows.length<2){c.innerHTML='<text x="20" y="40" fill="#8b93a7" font-size="13">No data for this symbol</text>';return}
+const L=44,R=8,T=10,B=24,W=360,H=230,n=rows.length;
+const net=rows.map(r=>r.long_pos-r.short_pos),lo=rows.map(r=>r.long_pos),sh=rows.map(r=>r.short_pos);
+const all=net.concat(lo,sh);let mn=Math.min(...all),mx=Math.max(...all);const p=(mx-mn)*0.05||1;mn-=p;mx+=p;
+const x=i=>L+i*(W-L-R)/(n-1),y=v=>T+(mx-v)*(H-T-B)/(mx-mn);
+let o='';for(let g=0;g<=4;g++){const v=mn+(mx-mn)*g/4,yy=y(v);o+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="#1f2740"/><text x="'+(L-4)+'" y="'+(yy+3)+'" fill="#8b93a7" font-size="9" text-anchor="end">'+fmt(v)+'</text>'}
+if(mn<0&&mx>0)o+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(0)+'" y2="'+y(0)+'" stroke="#475569" stroke-dasharray="3 3"/>';
+o+='<path d="'+path(lo,x,y)+'" fill="none" stroke="#22c55e" stroke-width="1.3" opacity=".8"/><path d="'+path(sh,x,y)+'" fill="none" stroke="#ef4444" stroke-width="1.3" opacity=".8"/><path d="'+path(net,x,y)+'" fill="none" stroke="#818cf8" stroke-width="2.2"/>';
+[0,Math.floor(n/2),n-1].forEach((i,j)=>{o+='<text x="'+x(i)+'" y="'+(H-6)+'" fill="#8b93a7" font-size="9" text-anchor="'+(j==0?'start':j==2?'end':'middle')+'">'+rows[i].report_date+'</text>'});
+c.innerHTML=o;
+const last=net[n-1],prev=net[n-2],rank=net.filter(v=>v<=last).length/n*100;
+document.getElementById('k1').textContent=last.toLocaleString();
+const d=last-prev,k2=document.getElementById('k2');k2.textContent=(d>0?'+':'')+d.toLocaleString();k2.style.color=d>0?'#22c55e':d<0?'#ef4444':'#e5e7eb';
+document.getEle
