@@ -14,6 +14,7 @@ svg{width:100%;height:auto;display:block}
 </style></head><body>
 <a href="quant.html">&larr; Quant Hybrid</a>
 <h1 id="t">Loading...</h1><div class="s" id="d"></div>
+<div class="card" id="sm"></div>
 <div class="card"><svg id="g" viewBox="0 0 200 118"></svg></div>
 <div class="card"><b>Components</b> <span class="s">(weight)</span><div id="c"></div></div>
 <div class="card"><b>Score history</b><svg id="h" viewBox="0 0 300 120"></svg><div class="s" id="hn"></div></div>
@@ -27,6 +28,7 @@ const q = p => fetch(SB_URL + "/rest/v1/" + p, {headers: {apikey: SB_KEY}}).then
 const W = {carry: 27, esi: 18, pmi: 18, vix: 9, cot: 9, retail: 19};
 const col = v => v > 0 ? "#1f8a4c" : v < 0 ? "#c0392b" : "#2a3350";
 const el = id => document.getElementById(id);
+function summ(L){const c=L.components||{},N={carry:"carry/yields",esi:"economic surprises",pmi:"relative PMIs",vix:"VIX",cot:"COT positioning",retail:"retail crowd (contrarian)"};const pos=[],neg=[];Object.keys(N).forEach(k=>{const v=c[k];if(v==null)return;if(v>=0.3)pos.push(N[k]);else if(v<=-0.3)neg.push(N[k])});const s=+L.score,b=s>=20?"Bullish":s>=5?"Mildly bullish":s<=-20?"Bearish":s<=-5?"Mildly bearish":"Neutral";const g=+L.gate<0.6?"The price trend gate is weak, which cuts the score.":+L.gate>=0.9?"The price trend gate is fully aligned.":"The price trend gate is partly aligned.";el("sm").innerHTML="<b>Summary</b><div>"+b+" ("+s.toFixed(1)+"). "+(pos.length?"Supporting: "+pos.join(", ")+". ":"")+(neg.length?"Against: "+neg.join(", ")+". ":"")+g+(+L.coverage<90?" Some data is missing, so treat it with extra caution.":"")+"</div>"}
 function gauge(v) {
   const R = 70, c = a => [100 + R * Math.cos(a * Math.PI / 180), 95 + R * Math.sin(a * Math.PI / 180)];
   const arc = (s, e, k) => { const [x1, y1] = c(s), [x2, y2] = c(e); return `<path d="M${x1} ${y1}A${R} ${R} 0 0 1 ${x2} ${y2}" stroke="${k}" stroke-width="16" fill="none"/>`; };
@@ -40,7 +42,7 @@ Promise.all([q("quant_scores?symbol=eq." + sym + "&order=as_of.asc&limit=400"),
   if (!Array.isArray(h) || !h.length) { el("d").textContent = "No data for this symbol yet."; return; }
   const L = h[h.length - 1], sc = +L.score;
   el("d").textContent = "Score " + sc.toFixed(1) + " | gate x" + L.gate + " | coverage " + L.coverage + "% | COT " + L.cot_regime + " | " + L.as_of;
-  gauge(sc);
+  gauge(sc); summ(L);
   el("c").innerHTML = Object.keys(W).map(k => {
     const v = L.components ? L.components[k] : null;
     const bar = v == null ? "" : `<i style="left:${v < 0 ? 50 + v * 50 : 50}%;width:${Math.abs(v) * 50}%;background:${col(v)}"></i>`;
