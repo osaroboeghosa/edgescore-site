@@ -1,5 +1,5 @@
 const SB='https://lveqwyasscpwslqvitbt.supabase.co',KEY='sb_publishable_xMyRvBFDAlDyDobfgFekug_gY0tEORR';
-const NAV=[['Dashboard','home.html'],['Screener','screener.html'],['Markets','markets.html'],['Macro','econ.html'],['COT','cot.html'],['Charts','charts.html']];
+const NAV=[['Dashboard','home.html'],['Screener','screener.html'],['Classic','classic.html'],['Markets','markets.html'],['Macro','macro.html'],['COT','cot.html'],['Charts','charts.html']];
 const $=i=>document.getElementById(i);
 async function api(p){const r=await fetch(SB+'/rest/v1/'+p,{headers:{apikey:KEY}});const j=await r.json();if(!Array.isArray(j))throw new Error(JSON.stringify(j));return j}
 const cls=v=>v>0?'pos':v<0?'neg':'mut';
