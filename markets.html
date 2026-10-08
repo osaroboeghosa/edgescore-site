@@ -1,19 +1,21 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Markets</title>
 <style>body{margin:0;padding:14px;background:#0a0e1f;color:#e5e7eb;font:14px system-ui,sans-serif}h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:18px 0 6px}.s{color:#8b93a7;font-size:12px}a{color:#818cf8}table{border-collapse:collapse;width:100%}th,td{padding:7px;text-align:center;border-bottom:1px solid #1f2740}th{color:#8b93a7;font-size:12px;background:#11162b}td:first-child{text-align:left;font-weight:600}.g{background:#15803d}.r{background:#b91c1c}.n{background:#1e2440}.y{background:#a16207}.big{font-size:30px;font-weight:700}.box{background:#11162b;border-radius:8px;padding:12px;text-align:center}.ch{display:inline-block;margin:3px;padding:4px 8px;border-radius:6px;font-size:12px}</style></head><body>
-<h1>Markets</h1><div class="s"><a href="quant.html">Quant</a> | <a href="econ.html">Economic Heatmap</a> | <a href="cot.html">COT History</a> | <a href="index.html">Classic</a></div>
+<h1>Markets</h1><div class="s"><a href="home.html">Home</a> | <a href="quant.html">Quant</a> | <a href="econ.html">Economic Heatmap</a> | <a href="cot.html">COT History</a> | <a href="charts.html">Macro Charts</a></div>
 <h2>Risk-On / Risk-Off gauge</h2><div class="box" id="rg">Loading...</div>
 <h2>Volatility (ATR) heatmap</h2><div style="overflow-x:auto"><table id="at"><tr><td>Loading...</td></tr></table></div>
-<h2>Carry matrix</h2><div style="overflow-x:auto"><table id="cy"><tr><td>Loading...</td></tr></table></div>
-<div class="s" style="margin-top:14px">Gauge: +1 or -1 per asset from its position vs the 50-day average, summed (range -6 to +6); gold, VIX and DXY count inverted. ATR ratio = 14-day ATR vs its 100-day average (under 0.8 compressed, over 1.2 expanded). Carry = your engine's carry score (-1 to +1). Not financial advice.</div>
+<h2>Rate spreads (carry)</h2><div style="overflow-x:auto"><table id="rt"><tr><td>Loading...</td></tr></table></div><div class="s" id="rn"></div>
+<h2>Carry matrix (engine score)</h2><div style="overflow-x:auto"><table id="cy"><tr><td>Loading...</td></tr></table></div>
+<div class="s" style="margin-top:14px">Gauge: +1 or -1 per asset from its position vs the 50-day average, summed (range -6 to +6); gold, VIX and DXY count inverted. ATR ratio = 14-day ATR vs its 100-day average (under 0.8 compressed, over 1.2 expanded). Rate spread = base currency rate minus quote currency rate, in percentage points; positive favours holding the base. Rates mix policy and 3-month interbank series and can be months old, so they are approximate. Carry matrix = your engine's carry score (-1 to +1). Not financial advice.</div>
 <script>
 const U='https://lveqwyasscpwslqvitbt.supabase.co',$=i=>document.getElementById(i);
 const cl=v=>v>0.15?'g':v<-0.15?'r':'n';
+const PAIRS=[['EURUSD','EUR','USD'],['GBPUSD','GBP','USD'],['AUDUSD','AUD','USD'],['NZDUSD','NZD','USD'],['USDJPY','USD','JPY'],['USDCAD','USD','CAD'],['USDCHF','USD','CHF']];
 (async()=>{try{
 const h=await (await fetch('quant.html')).text();const m=h.match(/sb_publishable_[A-Za-z0-9_-]+/);
 if(!m)throw new Error('key not found');
 const H={apikey:m[0]};
 const get=async p=>{const r=await (await fetch(U+'/rest/v1/'+p,{headers:H})).json();if(!Array.isArray(r))throw new Error(JSON.stringify(r));return r};
-const [g,a,q]=await Promise.all([get('risk_gauge?select=*&order=as_of.desc&limit=1'),get('atr_heat?select=*&order=as_of.desc&limit=60'),get('quant_latest?select=symbol,score,components&order=score.desc')]);
+const [g,a,q,pr]=await Promise.all([get('risk_gauge?select=*&order=as_of.desc&limit=1'),get('atr_heat?select=*&order=as_of.desc&limit=60'),get('quant_latest?select=symbol,score,components&order=score.desc'),get('policy_rates?select=*')]);
 if(g[0]){const x=g[0];let o='<div class="big">'+(x.score>0?'+':'')+x.score+'</div><div>'+x.regime+'</div><div>';
 for(const k in x.components){const v=x.components[k];o+='<span class="ch '+(v>0?'g':v<0?'r':'n')+'">'+k+' '+(v>0?'+':'')+v+'</span>'}
 $('rg').innerHTML=o+'</div><div class="s">'+x.as_of+'</div>'}else $('rg').textContent='No data yet';
@@ -21,6 +23,13 @@ const seen={},rows=[];a.forEach(r=>{if(!seen[r.symbol]){seen[r.symbol]=1;rows.pu
 let t='<tr><th>Asset</th><th>ATR %</th><th>Ratio</th><th>State</th></tr>';
 rows.forEach(r=>{t+='<tr><td>'+r.symbol+'</td><td>'+Number(r.atr_pct).toFixed(2)+'</td><td>'+Number(r.atr_ratio).toFixed(2)+'</td><td class="'+(r.state=='Expanded'?'r':r.state=='Compressed'?'y':'n')+'">'+r.state+'</td></tr>'});
 $('at').innerHTML=t;
+const rt={};pr.forEach(r=>{rt[r.ccy]=r});
+const sp=PAIRS.filter(p=>rt[p[1]]&&rt[p[2]]).map(p=>({s:p[0],b:p[1],q:p[2],br:+rt[p[1]].rate,qr:+rt[p[2]].rate}));
+sp.forEach(x=>{x.sp=x.br-x.qr});sp.sort((x,y)=>y.sp-x.sp);
+let w='<tr><th>Pair</th><th>Base rate</th><th>Quote rate</th><th>Spread</th></tr>';
+sp.forEach(x=>{const c=x.sp>=0.25?'g':x.sp<=-0.25?'r':'n';w+='<tr><td>'+x.s+'</td><td>'+x.b+' '+x.br.toFixed(2)+'</td><td>'+x.q+' '+x.qr.toFixed(2)+'</td><td class="'+c+'">'+(x.sp>0?'+':'')+x.sp.toFixed(2)+'</td></tr>'});
+$('rt').innerHTML=sp.length?w:'<tr><td>No rate data yet</td></tr>';
+$('rn').textContent='Rates as of: '+Object.keys(rt).sort().map(k=>k+' '+rt[k].as_of).join(', ');
 const cr=q.filter(r=>r.components&&r.components.carry!=null).sort((x,y)=>y.components.carry-x.components.carry);
 let c='<tr><th>Asset</th><th>Carry</th><th>Quant score</th></tr>';
 cr.forEach(r=>{const v=r.components.carry;c+='<tr><td>'+r.symbol+'</td><td class="'+cl(v)+'">'+v.toFixed(2)+'</td><td>'+Number(r.score).toFixed(1)+'</td></tr>'});
