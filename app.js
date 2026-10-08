@@ -3,8 +3,8 @@ const NAV=[['Dashboard','home.html'],['Screener','screener.html'],['Markets','ma
 const $=i=>document.getElementById(i);
 async function api(p){const r=await fetch(SB+'/rest/v1/'+p,{headers:{apikey:KEY}});const j=await r.json();if(!Array.isArray(j))throw new Error(JSON.stringify(j));return j}
 const cls=v=>v>0?'pos':v<0?'neg':'mut';
-const num=(v,d=1)=>v==null?'-':(+v).toFixed(d);
-const sgn=(v,d=1)=>v==null?'-':(v>0?'+':'')+(+v).toFixed(d);
+const num=(v,d=1)=>{if(v==null)return'-';const s=(+v).toFixed(d);return +s===0?(0).toFixed(d):s};
+const sgn=(v,d=1)=>{if(v==null)return'-';const s=(+v).toFixed(d);return +s===0?(0).toFixed(d):(v>0?'+':'')+s};
 function shell(){const here=location.pathname.split('/').pop()||'home.html';
 $('hdr').innerHTML='<div class="top"><a class="logo" href="home.html">Edge<i>Score</i></a></div><div class="nav">'+NAV.map(n=>'<a href="'+n[1]+'"'+(n[1]===here?' class="on"':'')+'>'+n[0]+'</a>').join('')+'</div>';
 document.body.insertAdjacentHTML('beforeend','<footer>Not financial advice. EdgeScore is an experimental research tool. Scores are unvalidated model outputs built from third-party data that may be delayed or wrong. Trading carries a risk of loss.</footer>')}
