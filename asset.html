@@ -11,12 +11,14 @@ a{color:#4f8cff}h1{font-size:22px;margin:8px 0 2px}.s{color:#8b93a7;font-size:12
 .bar i{position:absolute;top:0;height:100%}.v{width:44px;text-align:right}
 table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{padding:6px 4px;text-align:center;border-bottom:1px solid #1f2740}th{color:#8b93a7;font-weight:500}
 svg{width:100%;height:auto;display:block}
+.g{color:#22c55e}.r{color:#ef4444}
 </style></head><body>
 <a href="quant.html">&larr; Quant Hybrid</a>
 <h1 id="t">Loading...</h1><div class="s" id="d"></div>
 <div class="card" id="sm"></div>
 <div class="card"><svg id="g" viewBox="0 0 200 118"></svg></div>
 <div class="card"><b>Components</b> <span class="s">(weight)</span><div id="c"></div></div>
+<div class="card" id="lv"></div>
 <div class="card"><b>Score history</b><svg id="h" viewBox="0 0 300 120"></svg><div class="s" id="hn"></div></div>
 <div class="card"><b>Model checks</b><table id="b"></table>
 <div class="s">Hit % = share of signals that moved the right way. Base % = share of all periods that rose. Small samples prove little. Not financial advice.</div></div>
@@ -28,6 +30,15 @@ const q = p => fetch(SB_URL + "/rest/v1/" + p, {headers: {apikey: SB_KEY}}).then
 const W = {carry: 27, esi: 18, pmi: 18, vix: 9, cot: 9, retail: 19};
 const col = v => v > 0 ? "#1f8a4c" : v < 0 ? "#c0392b" : "#2a3350";
 const el = id => document.getElementById(id);
+const fp = v => v >= 100 ? v.toFixed(2) : v >= 10 ? v.toFixed(3) : v.toFixed(5);
+function levels(x){
+  if(!x){el("lv").innerHTML="<b>Levels</b><div class='s'>No level data yet.</div>";return}
+  const p=+x.price,a=+x.atr,s5=+x.sma50,s2=+x.sma200;
+  const cl=x.sma_signal==="Bullish"?"g":x.sma_signal==="Bearish"?"r":"";
+  el("lv").innerHTML="<b>Levels</b> <span class='s'>("+x.as_of+")</span>"+
+  "<table><tr><th>Price</th><th>SMA 50</th><th>SMA 200</th><th>Signal</th></tr><tr><td>"+fp(p)+"</td><td>"+fp(s5)+"</td><td>"+fp(s2)+"</td><td class='"+cl+"'>"+x.sma_signal+"</td></tr></table>"+
+  "<table style='margin-top:8px'><tr><th>Range</th><th>Low</th><th>High</th></tr><tr><td>1 ATR</td><td>"+fp(p-a)+"</td><td>"+fp(p+a)+"</td></tr><tr><td>2 ATR</td><td>"+fp(p-2*a)+"</td><td>"+fp(p+2*a)+"</td></tr></table>"+
+  "<div class='s'>Signal: Bullish = price above SMA 50 above SMA 200; Bearish = the reverse. ATR ranges show typical daily-move distances from the current price. They are volatility ranges, not predictions or targets. Not financial advice.</div>"}
 function summ(L){const c=L.components||{},N={carry:"carry/yields",esi:"economic surprises",pmi:"relative PMIs",vix:"VIX",cot:"COT positioning",retail:"retail crowd (contrarian)"};const pos=[],neg=[];Object.keys(N).forEach(k=>{const v=c[k];if(v==null)return;if(v>=0.3)pos.push(N[k]);else if(v<=-0.3)neg.push(N[k])});const s=+L.score,b=s>=20?"Bullish":s>=5?"Mildly bullish":s<=-20?"Bearish":s<=-5?"Mildly bearish":"Neutral";const g=+L.gate<0.6?"The price trend gate is weak, which cuts the score.":+L.gate>=0.9?"The price trend gate is fully aligned.":"The price trend gate is partly aligned.";el("sm").innerHTML="<b>Summary</b><div>"+b+" ("+s.toFixed(1)+"). "+(pos.length?"Supporting: "+pos.join(", ")+". ":"")+(neg.length?"Against: "+neg.join(", ")+". ":"")+g+(+L.coverage<90?" Some data is missing, so treat it with extra caution.":"")+"</div>"}
 function gauge(v) {
   const R = 70, c = a => [100 + R * Math.cos(a * Math.PI / 180), 95 + R * Math.sin(a * Math.PI / 180)];
@@ -37,8 +48,10 @@ function gauge(v) {
     `<line x1="100" y1="95" x2="${100 + (nx - 100) * .85}" y2="${95 + (ny - 95) * .85}" stroke="#fff" stroke-width="3"/><circle cx="100" cy="95" r="5" fill="#fff"/><text x="100" y="114" text-anchor="middle" fill="#e6e9f0" font-size="12">${v.toFixed(1)}</text>`;
 }
 Promise.all([q("quant_scores?symbol=eq." + sym + "&order=as_of.asc&limit=400"),
-             q("backtest_results?symbol=in.(" + sym + ",ALL)&order=kind.asc,horizon.asc,symbol.asc")]).then(([h, b]) => {
+             q("backtest_results?symbol=in.(" + sym + ",ALL)&order=kind.asc,horizon.asc,symbol.asc"),
+             q("asset_levels?symbol=eq." + sym + "&order=as_of.desc&limit=1")]).then(([h, b, lv]) => {
   el("t").textContent = sym;
+  levels(Array.isArray(lv) && lv.length ? lv[0] : null);
   if (!Array.isArray(h) || !h.length) { el("d").textContent = "No data for this symbol yet."; return; }
   const L = h[h.length - 1], sc = +L.score;
   el("d").textContent = "Score " + sc.toFixed(1) + " | gate x" + L.gate + " | coverage " + L.coverage + "% | COT " + L.cot_regime + " | " + L.as_of;
