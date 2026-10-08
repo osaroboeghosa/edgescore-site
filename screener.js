@@ -15,7 +15,7 @@ const k=(v,t,c)=>'<div class="kpi"><b class="'+(c||'')+'">'+v+'</b><span>'+t+'</
 function draw(){const cq=mode==='Quant',rows=cq?QR:CR,n=rows.length,srt=rows.slice().sort((x,y)=>y.sc-x.sc),th=cq?5:3,d=cq?1:0;
 $('sub').textContent=(cq?'Quant Hybrid scores as of '+QD:'Classic matrix scores as of '+CD)+' | '+n+' markets';
 $('kp').innerHTML=k(rows.filter(x=>x.sc>=th).length,'Bullish (score +'+th+' or more)','pos')+k(rows.filter(x=>x.sc<=-th).length,'Bearish (score -'+th+' or less)','neg')+k(srt[0].s+' '+sgn(srt[0].sc,d),'Strongest','pos')+k(srt[n-1].s+' '+sgn(srt[n-1].sc,d),'Weakest','neg');
-T=table('t',cq?QC:CC,rows,{sort:'sc',go:s=>location.href='asset.html?symbol='+s});
+T=table('t',cq?QC:CC,rows,{sort:'sc',go:s=>location.href=(mode==='Classic'?'classic.html?s=':'asset.html?symbol=')+s});
 T.search(Q);T.filter(F);$('nt').textContent=cq?NQ:NC}
 (async()=>{try{
 const [q,a,l,t]=await Promise.all([api('quant_latest?select=*'),api('atr_heat?select=symbol,state&order=as_of.desc&limit=60'),api('asset_levels?select=symbol,sma_signal&order=as_of.desc&limit=60'),api('top_setups?select=*')]);
