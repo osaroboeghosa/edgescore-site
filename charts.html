@@ -1,37 +1,8 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Macro Charts</title>
-<style>body{margin:0;padding:14px;background:#0a0e1f;color:#e5e7eb;font:14px system-ui,sans-serif}h1{font-size:20px;margin:0 0 4px}.s{color:#8b93a7;font-size:12px;margin-bottom:12px}a{color:#818cf8}select{background:#11162b;color:#e5e7eb;border:1px solid #2a3350;border-radius:6px;padding:8px;font-size:15px;margin-bottom:10px}.k{display:flex;gap:8px;margin:8px 0}.k div{flex:1;background:#11162b;border-radius:8px;padding:8px;text-align:center}.k b{display:block;font-size:16px}.k span{font-size:11px;color:#8b93a7}svg{width:100%;background:#11162b;border-radius:8px}.f{color:#8b93a7;font-size:11px;margin-top:12px}</style></head><body>
-<h1>Macro Charts</h1><div class="s"><a href="quant.html">Quant</a> | <a href="markets.html">Markets</a> | <a href="econ.html">Economic Heatmap</a> | <a href="cot.html">COT History</a></div>
-<select id="sy"></select>
-<div class="k"><div><b id="k1">-</b><span>Latest</span></div><div><b id="k2">-</b><span>Change vs previous</span></div><div><b id="k3">-</b><span>Data points</span></div></div>
-<svg id="c" viewBox="0 0 360 230"></svg>
-<div class="f">US macro series from FRED and calendar feeds, as stored in your database. Short history for now. Not financial advice.</div>
-<script>
-const U='https://lveqwyasscpwslqvitbt.supabase.co',$=i=>document.getElementById(i);
-const c=$('c'),sy=$('sy');let hd=null,all={};
-function draw(r){
-if(r.length<2){c.innerHTML='<text x="20" y="40" fill="#8b93a7">Only one data point so far</text>';return}
-const L=44,T=12,B=26,W=360,H=230,n=r.length,v=r.map(a=>+a.actual);
-let mn=Math.min(...v),mx=Math.max(...v);const p=(mx-mn)*0.1||1;mn-=p;mx+=p;
-const x=i=>L+i*(W-L-12)/(n-1),y=a=>T+(mx-a)*(H-T-B)/(mx-mn);
-let o='';
-for(let g=0;g<=4;g++){const a=mn+(mx-mn)*g/4,yy=y(a);o+='<line x1="'+L+'" x2="348" y1="'+yy+'" y2="'+yy+'" stroke="#1f2740"/><text x="40" y="'+(yy+3)+'" fill="#8b93a7" font-size="9" text-anchor="end">'+(Math.abs(a)>=1000?(a/1000).toFixed(1)+'k':a.toFixed(2))+'</text>'}
-o+='<polyline fill="none" stroke="#818cf8" stroke-width="2.2" points="'+v.map((a,i)=>x(i).toFixed(1)+','+y(a).toFixed(1)).join(' ')+'"/>';
-v.forEach((a,i)=>{o+='<circle cx="'+x(i)+'" cy="'+y(a)+'" r="3" fill="#818cf8"/>'});
-o+='<text x="'+L+'" y="222" fill="#8b93a7" font-size="9">'+r[0].period+'</text><text x="348" y="222" fill="#8b93a7" font-size="9" text-anchor="end">'+r[n-1].period+'</text>';
-c.innerHTML=o}
-function show(){const r=all[sy.value]||[];draw(r);const n=r.length;
-$('k1').textContent=n?r[n-1].actual:'-';
-const d=n>1?r[n-1].actual-r[n-2].actual:null;
-$('k2').textContent=d==null?'-':(d>0?'+':'')+(+d.toFixed(3));
-$('k2').style.color=d>0?'#22c55e':d<0?'#ef4444':'#e5e7eb';
-$('k3').textContent=n}
-(async()=>{try{
-const h=await (await fetch('quant.html')).text();const m=h.match(/sb_publishable_[A-Za-z0-9_-]+/);
-if(!m)throw new Error('key not found');hd={apikey:m[0]};
-const r=await (await fetch(U+'/rest/v1/macro?select=indicator,period,actual&order=period.asc&limit=1000',{headers:hd})).json();
-if(!Array.isArray(r))throw new Error(JSON.stringify(r));
-r.forEach(a=>{if(a.actual!=null)(all[a.indicator]=all[a.indicator]||[]).push(a)});
-Object.keys(all).sort().forEach(k=>{const o=document.createElement('option');o.value=o.textContent=k;if(k==='CPI')o.selected=true;sy.appendChild(o)});
-sy.onchange=show;show()}
-catch(e){c.innerHTML='<text x="10" y="40" fill="#ef4444" font-size="12">Error: '+e.message+'</text>'}})();
-</script></body></html>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Charts - EdgeScore</title><link rel="stylesheet" href="app.css?v=2">
+<style>select{background:#0d1324;border:1px solid var(--b);color:inherit;border-radius:8px;padding:9px 10px;margin-bottom:10px;width:100%;box-sizing:border-box;font-size:15px}.rg{margin:0 0 10px}.rg .chip{cursor:pointer}</style></head><body>
+<div id="hdr"></div><main>
+<h1 style="font-size:22px;margin:16px 0 4px">Charts</h1><div class="sub" id="sub">Price, model score and macro history</div>
+<div class="card"><h2>Price</h2><select id="sy"></select><div class="rg" id="rg"></div><div class="sub" id="ps"></div><div id="pc"></div></div>
+<div class="card"><h2>Model score history</h2><div class="sub" id="ss"></div><div id="sh"></div></div>
+<div class="card"><h2>Macro series</h2><select id="mi"></select><div class="sub" id="ms"></div><div id="mc"></div></div>
+</main><script src="app.js?v=3"></script><script src="chart.js?v=2"></script><script src="charts.js?v=1"></script></body></html>
