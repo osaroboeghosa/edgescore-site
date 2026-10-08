@@ -9,6 +9,7 @@ const d=await api('top_setups?select=*&order=score.desc');
 const rows=d.map(x=>{let c=x.components;if(typeof c==='string'){try{c=JSON.parse(c)}catch(e){c={}}}c=c||{};const v=KS.map(k=>+c[k]||0);return{sym:x.symbol,grp:GR[x.symbol]||'Other',score:+x.score,bias:x.bias,bull:v.filter(z=>z>0).length,bear:v.filter(z=>z<0).length,v:v,as:String(x.as_of||'').slice(0,10)}});
 function show(s){const r=rows.find(x=>x.sym===s);$('dc').style.display='block';
 $('dt').innerHTML=s+' <span class="'+bc(r.bias)+'">'+sgn(r.score,0)+' '+r.bias+'</span>';
+$('dt').innerHTML+=' <a href="asset.html?symbol='+s+'" style="font-size:13px;margin-left:8px">Full analysis &rarr;</a>';
 $('db').innerHTML=KS.map((k,i)=>{const v=r.v[i];return'<div style="display:flex;align-items:center;gap:8px;margin:6px 0"><span style="width:84px;font-size:13px">'+k+'</span><div style="flex:1;height:8px;background:#1e2440;border-radius:4px;position:relative"><div style="position:absolute;height:8px;border-radius:4px;background:'+(v>0?'#2dd4bf':'#f87171')+';left:'+(v>=0?50:50+v*25)+'%;width:'+Math.abs(v)*25+'%"></div></div><b class="'+cls(v)+'" style="width:26px;text-align:right">'+sgn(v,0)+'</b></div>'}).join('');
 $('dc').scrollIntoView({behavior:'smooth'})}
 const bu=rows.filter(r=>r.score>=3).length,be=rows.filter(r=>r.score<=-3).length;
