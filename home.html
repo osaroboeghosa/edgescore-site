@@ -3,6 +3,7 @@
 <div id="hdr"></div><main>
 <h1>Dashboard</h1><div class="sub" id="sub">Loading...</div>
 <div class="grid" id="kp"></div>
+<div class="card"><h2>Top setups</h2><div id="ts"></div><div class="sub" style="margin-top:8px"><a href="screener.html">Open Screener</a> | <a href="classic.html">Classic matrix</a></div></div>
 <div class="card"><h2>Market heatmap (Quant score)</h2><div class="hm" id="hm"></div></div>
 <div class="two"><div class="card"><h2>Strongest</h2><div id="tp"></div></div><div class="card"><h2>Weakest</h2><div id="bt"></div></div></div>
 <div class="card"><h2>Risk gauge</h2><div id="rg"></div></div>
@@ -16,6 +17,7 @@ $('sub').textContent='Updated '+q[0].as_of+' | '+n+' markets | refreshed every w
 const k=(v,t,c)=>'<div class="kpi"><b class="'+(c||'')+'">'+v+'</b><span>'+t+'</span></div>';
 const x=g[0];
 $('kp').innerHTML=(x?k((x.score>0?'+':'')+x.score+' '+x.regime,'Risk gauge',cls(x.score)):'')+k(q.filter(r=>r.score>=5).length,'Bullish markets','pos')+k(q.filter(r=>r.score<=-5).length,'Bearish markets','neg')+k(sgn(avg),'Average score',cls(avg));
+$('ts').innerHTML=q.slice(0,3).concat(q.slice(-3)).map(r=>'<a class="chip" href="asset.html?symbol='+r.symbol+'" style="border-color:'+(r.score>0?'var(--g)':'var(--r)')+'">'+r.symbol+' '+sgn(r.score,0)+'</a> ').join('');
 $('hm').innerHTML=q.map(r=>'<a href="asset.html?symbol='+r.symbol+'" style="background:'+hue(+r.score)+'"><b>'+r.symbol+'</b><span>'+sgn(r.score,0)+'</span></a>').join('');
 const row=r=>'<div class="rw"><a href="asset.html?symbol='+r.symbol+'">'+r.symbol+'</a><b class="'+cls(r.score)+'">'+sgn(r.score)+'</b></div>';
 $('tp').innerHTML=q.slice(0,5).map(row).join('');$('bt').innerHTML=q.slice(-5).reverse().map(row).join('');
