@@ -1,40 +1,9 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COT History</title>
-<style>body{margin:0;padding:14px;background:#0a0e1f;color:#e5e7eb;font:14px system-ui,sans-serif}h1{font-size:20px;margin:0 0 4px}.s{color:#8b93a7;font-size:12px;margin-bottom:12px}a{color:#818cf8}select{background:#11162b;color:#e5e7eb;border:1px solid #2a3350;border-radius:6px;padding:8px;font-size:15px;margin-bottom:10px}.k{display:flex;gap:8px;margin:8px 0}.k div{flex:1;background:#11162b;border-radius:8px;padding:8px;text-align:center}.k b{display:block;font-size:16px}.k span{font-size:11px;color:#8b93a7}svg{width:100%;background:#11162b;border-radius:8px}.f{color:#8b93a7;font-size:11px;margin-top:12px}</style></head><body>
-<h1>COT History</h1><div class="s">Weekly CFTC positioning. <a href="quant.html">Quant</a> | <a href="econ.html">Economic Heatmap</a> | <a href="index.html">Classic</a></div>
-<select id="sy"></select>
-<div class="k"><div><b id="k1">-</b><span>Net now</span></div><div><b id="k2">-</b><span>Change vs last week</span></div><div><b id="k3">-</b><span>Percentile</span></div></div>
-<svg id="c" viewBox="0 0 360 230"></svg>
-<div class="f">Purple = net, green = long, red = short. Net = long minus short. Percentile = where the latest net sits within all weeks loaded. DAX and UK100 have no CFTC data. Not financial advice.</div>
-<script>
-const U='https://lveqwyasscpwslqvitbt.supabase.co';
-const S=['AUDUSD','COPPER','DOW','EURUSD','GBPUSD','GOLD','NASDAQ','NIKKEI','NZDUSD','PLATINUM','SILVER','SPX500','USDCAD','USDCHF','USDJPY'];
-const sy=document.getElementById('sy'),c=document.getElementById('c'),$=i=>document.getElementById(i);
-const q=new URLSearchParams(location.search).get('symbol');
-S.forEach(s=>{const o=document.createElement('option');o.value=o.textContent=s;if(s===q)o.selected=true;sy.appendChild(o)});
-let hd=null;
-const fm=v=>Math.abs(v)>=1000?(v/1000).toFixed(0)+'k':String(Math.round(v));
-const P=(a,x,y)=>a.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ');
-function draw(r){
-if(r.length<2){c.innerHTML='<text x="20" y="40" fill="#8b93a7">No data</text>';return}
-const L=44,T=10,B=24,W=360,H=230,n=r.length;
-const lo=r.map(a=>a.long_pos),sh=r.map(a=>a.short_pos),ne=r.map(a=>a.long_pos-a.short_pos);
-const al=ne.concat(lo,sh);let mn=Math.min(...al),mx=Math.max(...al);const p=(mx-mn)*0.05||1;mn-=p;mx+=p;
-const x=i=>L+i*(W-L-8)/(n-1),y=v=>T+(mx-v)*(H-T-B)/(mx-mn);
-let o='';
-for(let g=0;g<=4;g++){const v=mn+(mx-mn)*g/4,yy=y(v);o+='<line x1="'+L+'" x2="352" y1="'+yy+'" y2="'+yy+'" stroke="#1f2740"/><text x="40" y="'+(yy+3)+'" fill="#8b93a7" font-size="9" text-anchor="end">'+fm(v)+'</text>'}
-o+='<path d="'+P(lo,x,y)+'" fill="none" stroke="#22c55e" stroke-width="1.3"/><path d="'+P(sh,x,y)+'" fill="none" stroke="#ef4444" stroke-width="1.3"/><path d="'+P(ne,x,y)+'" fill="none" stroke="#818cf8" stroke-width="2.2"/>';
-o+='<text x="'+L+'" y="224" fill="#8b93a7" font-size="9">'+r[0].report_date+'</text><text x="352" y="224" fill="#8b93a7" font-size="9" text-anchor="end">'+r[n-1].report_date+'</text>';
-c.innerHTML=o;
-const a=ne[n-1],b=ne[n-2],d=a-b;
-$('k1').textContent=a.toLocaleString();
-$('k2').textContent=(d>0?'+':'')+d.toLocaleString();
-$('k2').style.color=d>0?'#22c55e':d<0?'#ef4444':'#e5e7eb';
-$('k3').textContent=Math.round(ne.filter(v=>v<=a).length/n*100)+'%'}
-async function load(){
-try{
-if(!hd){const h=await (await fetch('quant.html')).text();const m=h.match(/sb_publishable_[A-Za-z0-9_-]+/);if(!m)throw new Error('key not found');hd={apikey:m[0]}}
-const r=await fetch(U+'/rest/v1/cot?select=report_date,long_pos,short_pos&symbol=eq.'+sy.value+'&order=report_date.asc&limit=600',{headers:hd});
-const j=await r.json();if(!Array.isArray(j))throw new Error(JSON.stringify(j));draw(j)}
-catch(e){c.innerHTML='<text x="10" y="40" fill="#ef4444" font-size="12">Error: '+e.message+'</text>'}}
-sy.onchange=load;load();
-</script></body></html>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COT - EdgeScore</title><link rel="stylesheet" href="app.css?v=2">
+<style>.tw{overflow-x:auto}.tw table{width:100%;border-collapse:collapse}.tw th,.tw td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--b);white-space:nowrap}.tw th{color:#8b93a7;font-size:12px;cursor:pointer}.tw th:first-child,.tw td:first-child{text-align:left;font-weight:600}.tw tr[data-r]:hover{background:#ffffff08}.chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}.chips button{cursor:pointer;border:1px solid var(--b);background:none;color:inherit;border-radius:14px;padding:5px 12px;font-size:13px}.chips button.on{background:#2dd4bf33;border-color:#2dd4bf}select{background:#0d1324;border:1px solid var(--b);color:inherit;border-radius:8px;padding:9px 10px;margin-bottom:10px;width:100%;box-sizing:border-box;font-size:15px}</style></head><body>
+<div id="hdr"></div><main>
+<h1 style="font-size:22px;margin:16px 0 4px">COT positioning</h1><div class="sub" id="sub">Loading...</div>
+<div class="grid" id="kp"></div>
+<div class="card" id="ch"><h2>Net position</h2><select id="sy"></select><div class="sub" id="ds"></div><div id="l1"></div></div>
+<div class="card"><h2>Long vs short</h2><div id="l2"></div></div>
+<div class="card"><h2>All markets</h2><div class="chips" id="cp"></div><div class="tw" id="tb"></div><div class="sub">Net = long minus short (non-commercial, CFTC futures). Percentile = where the latest net sits among all weeks loaded. Above 90% is crowded long, below 10% crowded short. For USDJPY, USDCAD and USDCHF the contract is the foreign currency, the opposite side of the pair. DAX and UK100 have no CFTC data.</div></div>
+</main><script src="app.js?v=2"></script><script src="chart.js?v=2"></script><script src="cot.js?v=1"></script></body></html>
