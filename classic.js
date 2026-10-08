@@ -20,4 +20,5 @@ $('cp').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('cp').querySelect
 $('q').oninput=e=>T.search(e.target.value);
 $('hm').innerHTML='<table class="hm"><tr><th>Market</th>'+AB.map(a=>'<th>'+a+'</th>').join('')+'</tr>'+rows.map(r=>'<tr data-s="'+r.sym+'" style="cursor:pointer"><td>'+r.sym+'</td>'+r.v.map(v=>'<td style="background:'+col(v)+'">'+(v?sgn(v,0):'')+'</td>').join('')+'</tr>').join('')+'</table>';
 $('hm').querySelectorAll('tr[data-s]').forEach(t=>t.onclick=()=>show(t.dataset.s));
+  const sp=new URLSearchParams(location.search).get('s');if(sp&&rows.some(r=>r.sym===sp))show(sp);
 }catch(e){$('sub').textContent='Error: '+e.message}})();
