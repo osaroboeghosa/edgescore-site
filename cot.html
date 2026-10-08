@@ -34,4 +34,7 @@ async function load(){
 try{
 if(!hd){const h=await (await fetch('quant.html')).text();const m=h.match(/sb_publishable_[A-Za-z0-9_-]+/);if(!m)throw new Error('key not found');hd={apikey:m[0]}}
 const r=await fetch(U+'/rest/v1/cot?select=report_date,long_pos,short_pos&symbol=eq.'+sy.value+'&order=report_date.asc&limit=600',{headers:hd});
-const j=await r.json();if(!Array.isArray(j))thro
+const j=await r.json();if(!Array.isArray(j))throw new Error(JSON.stringify(j));draw(j)}
+catch(e){c.innerHTML='<text x="10" y="40" fill="#ef4444" font-size="12">Error: '+e.message+'</text>'}}
+sy.onchange=load;load();
+</script></body></html>
