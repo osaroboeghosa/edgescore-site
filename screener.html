@@ -2,29 +2,9 @@
 <div id="hdr"></div><main>
 <h1>Screener</h1><div class="sub" id="sub">Loading...</div>
 <div class="grid" id="kp"></div>
+<div class="tools"><span id="md"></span></div>
 <div class="tools"><input id="q" placeholder="Search symbol"><span id="ch"></span></div>
 <div class="tw" id="t"></div>
-<div class="sub" style="margin-top:8px">Trend = price vs the 50 and 200-day averages. Volatility = 14-day ATR vs its 100-day average. Component columns run from -1 (bearish) to +1 (bullish). Tap a column to sort, tap a row for the asset page.</div>
+<div class="sub" id="nt" style="margin-top:8px"></div>
 </main>
-<script src="app.js"></script>
-<script>
-shell();
-const CL={EURUSD:'Forex',GBPUSD:'Forex',AUDUSD:'Forex',NZDUSD:'Forex',USDJPY:'Forex',USDCAD:'Forex',USDCHF:'Forex',NIKKEI:'Indices',NASDAQ:'Indices',DOW:'Indices',DAX:'Indices',SPX500:'Indices',UK100:'Indices',GOLD:'Commodities',SILVER:'Commodities',PLATINUM:'Commodities',COPPER:'Commodities'};
-const bias=s=>s>=20?'Bullish':s>=5?'Mild bullish':s<=-20?'Bearish':s<=-5?'Mild bearish':'Neutral';
-const cc=k=>({k:k,t:k[0].toUpperCase()+k.slice(1),v:x=>x[k]==null?-99:x[k],f:x=>sgn(x[k],2),c:x=>cls(x[k])});
-(async()=>{try{
-const [q,a,l]=await Promise.all([api('quant_latest?select=*'),api('atr_heat?select=symbol,state&order=as_of.desc&limit=60'),api('asset_levels?select=symbol,sma_signal&order=as_of.desc&limit=60')]);
-const A={},L={};a.forEach(x=>{if(!A[x.symbol])A[x.symbol]=x});l.forEach(x=>{if(!L[x.symbol])L[x.symbol]=x});
-const rows=q.map(x=>{const c=x.components||{};return{s:x.symbol,cl:CL[x.symbol]||'Other',sc:+x.score,tr:(L[x.symbol]||{}).sma_signal||'-',vol:(A[x.symbol]||{}).state||'-',carry:c.carry,esi:c.esi,pmi:c.pmi,vix:c.vix,cot:c.cot,retail:c.retail,cv:+x.coverage}});
-const srt=rows.slice().sort((x,y)=>y.sc-x.sc),n=rows.length;
-$('sub').textContent='Quant Hybrid scores as of '+(q[0]?q[0].as_of:'-')+' | '+n+' markets';
-const k=(v,t,c)=>'<div class="kpi"><b class="'+(c||'')+'">'+v+'</b><span>'+t+'</span></div>';
-$('kp').innerHTML=k(rows.filter(x=>x.sc>=5).length,'Bullish (score +5 or more)','pos')+k(rows.filter(x=>x.sc<=-5).length,'Bearish (score -5 or less)','neg')+k(srt[0].s+' '+sgn(srt[0].sc),'Strongest','pos')+k(srt[n-1].s+' '+sgn(srt[n-1].sc),'Weakest','neg');
-const cols=[{k:'s',t:'Symbol',f:x=>'<b>'+x.s+'</b>'},{k:'cl',t:'Class',c:()=>'mut'},{k:'sc',t:'Score',f:x=>sgn(x.sc),c:x=>cls(x.sc)},{k:'b',t:'Bias',v:x=>x.sc,f:x=>bias(x.sc),c:x=>x.sc>=5?'pos':x.sc<=-5?'neg':'mut'},{k:'tr',t:'Trend',c:x=>x.tr==='Bullish'?'pos':x.tr==='Bearish'?'neg':'mut'},{k:'vol',t:'Volatility'},cc('carry'),cc('esi'),cc('pmi'),cc('vix'),cc('cot'),cc('retail'),{k:'cv',t:'Coverage',f:x=>num(x.cv,0)+'%',c:()=>'mut'}];
-const T=table('t',cols,rows,{sort:'sc',go:s=>location.href='asset.html?symbol='+s});
-$('q').oninput=e=>T.search(e.target.value);
-const ch=['All','Forex','Indices','Commodities'];
-$('ch').innerHTML=ch.map((c,i)=>'<span class="chip'+(i?'':' on')+'">'+c+'</span>').join(' ');
-document.querySelectorAll('#ch .chip').forEach(e=>e.onclick=()=>{document.querySelectorAll('#ch .chip').forEach(z=>z.classList.remove('on'));e.classList.add('on');const c=e.textContent;T.filter(c==='All'?null:x=>x.cl===c)});
-}catch(e){$('sub').textContent='Error: '+e.message}})();
-</script></body></html>
+<script src="app.js?v=3"></script><script src="screener.js?v=1"></script></body></html>
