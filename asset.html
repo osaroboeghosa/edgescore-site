@@ -1,76 +1,12 @@
-<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EdgeScore asset</title>
-<style>
-body{margin:0;background:#0b1120;color:#e6e9f0;font:14px/1.45 system-ui,Segoe UI,Roboto,sans-serif;padding:16px;max-width:720px}
-a{color:#4f8cff}h1{font-size:22px;margin:8px 0 2px}.s{color:#8b93a7;font-size:12px}
-.card{background:#121a30;border:1px solid #1f2740;border-radius:10px;padding:12px;margin:12px 0}
-.row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}
-.lab{width:96px;color:#8b93a7}.bar{flex:1;height:14px;background:#1f2740;position:relative;border-radius:3px}
-.bar i{position:absolute;top:0;height:100%}.v{width:44px;text-align:right}
-table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{padding:6px 4px;text-align:center;border-bottom:1px solid #1f2740}th{color:#8b93a7;font-weight:500}
-svg{width:100%;height:auto;display:block}
-.g{color:#22c55e}.r{color:#ef4444}
-</style></head><body>
-<a href="quant.html">&larr; Quant Hybrid</a>
-<h1 id="t">Loading...</h1><div class="s" id="d"></div>
-<div class="card" id="sm"></div>
-<div class="card"><svg id="g" viewBox="0 0 200 118"></svg></div>
-<div class="card"><b>Components</b> <span class="s">(weight)</span><div id="c"></div></div>
-<div class="card" id="lv"></div>
-<div class="card"><b>Score history</b><svg id="h" viewBox="0 0 300 120"></svg><div class="s" id="hn"></div></div>
-<div class="card"><b>Model checks</b><table id="b"></table>
-<div class="s">Hit % = share of signals that moved the right way. Base % = share of all periods that rose. Small samples prove little. Not financial advice.</div></div>
-<script>
-const SB_URL = "https://lveqwyasscpwslqvitbt.supabase.co";
-const SB_KEY = "sb_publishable_xMyRvBFDAlDyDobfgFekug_gY0tEORR";
-const sym = (new URLSearchParams(location.search).get("symbol") || "EURUSD").toUpperCase().replace(/[^A-Z0-9]/g, "");
-const q = p => fetch(SB_URL + "/rest/v1/" + p, {headers: {apikey: SB_KEY}}).then(r => r.json());
-const W = {carry: 27, esi: 18, pmi: 18, vix: 9, cot: 9, retail: 19};
-const col = v => v > 0 ? "#1f8a4c" : v < 0 ? "#c0392b" : "#2a3350";
-const el = id => document.getElementById(id);
-const fp = v => v >= 100 ? v.toFixed(2) : v >= 10 ? v.toFixed(3) : v.toFixed(5);
-function levels(x){
-  if(!x){el("lv").innerHTML="<b>Levels</b><div class='s'>No level data yet.</div>";return}
-  const p=+x.price,a=+x.atr,s5=+x.sma50,s2=+x.sma200;
-  const cl=x.sma_signal==="Bullish"?"g":x.sma_signal==="Bearish"?"r":"";
-  el("lv").innerHTML="<b>Levels</b> <span class='s'>("+x.as_of+")</span>"+
-  "<table><tr><th>Price</th><th>SMA 50</th><th>SMA 200</th><th>Signal</th></tr><tr><td>"+fp(p)+"</td><td>"+fp(s5)+"</td><td>"+fp(s2)+"</td><td class='"+cl+"'>"+x.sma_signal+"</td></tr></table>"+
-  "<table style='margin-top:8px'><tr><th>Range</th><th>Low</th><th>High</th></tr><tr><td>1 ATR</td><td>"+fp(p-a)+"</td><td>"+fp(p+a)+"</td></tr><tr><td>2 ATR</td><td>"+fp(p-2*a)+"</td><td>"+fp(p+2*a)+"</td></tr></table>"+
-  "<div class='s'>Signal: Bullish = price above SMA 50 above SMA 200; Bearish = the reverse. ATR ranges show typical daily-move distances from the current price. They are volatility ranges, not predictions or targets. Not financial advice.</div>"}
-function summ(L){const c=L.components||{},N={carry:"carry/yields",esi:"economic surprises",pmi:"relative PMIs",vix:"VIX",cot:"COT positioning",retail:"retail crowd (contrarian)"};const pos=[],neg=[];Object.keys(N).forEach(k=>{const v=c[k];if(v==null)return;if(v>=0.3)pos.push(N[k]);else if(v<=-0.3)neg.push(N[k])});const s=+L.score,b=s>=20?"Bullish":s>=5?"Mildly bullish":s<=-20?"Bearish":s<=-5?"Mildly bearish":"Neutral";const g=+L.gate<0.6?"The price trend gate is weak, which cuts the score.":+L.gate>=0.9?"The price trend gate is fully aligned.":"The price trend gate is partly aligned.";el("sm").innerHTML="<b>Summary</b><div>"+b+" ("+s.toFixed(1)+"). "+(pos.length?"Supporting: "+pos.join(", ")+". ":"")+(neg.length?"Against: "+neg.join(", ")+". ":"")+g+(+L.coverage<90?" Some data is missing, so treat it with extra caution.":"")+"</div>"}
-function gauge(v) {
-  const R = 70, c = a => [100 + R * Math.cos(a * Math.PI / 180), 95 + R * Math.sin(a * Math.PI / 180)];
-  const arc = (s, e, k) => { const [x1, y1] = c(s), [x2, y2] = c(e); return `<path d="M${x1} ${y1}A${R} ${R} 0 0 1 ${x2} ${y2}" stroke="${k}" stroke-width="16" fill="none"/>`; };
-  const a = -180 + (Math.max(-100, Math.min(100, v)) + 100) / 200 * 180, [nx, ny] = c(a);
-  el("g").innerHTML = arc(-180, -120, "#c0392b") + arc(-120, -60, "#555963") + arc(-60, 0, "#1f8a4c") +
-    `<line x1="100" y1="95" x2="${100 + (nx - 100) * .85}" y2="${95 + (ny - 95) * .85}" stroke="#fff" stroke-width="3"/><circle cx="100" cy="95" r="5" fill="#fff"/><text x="100" y="114" text-anchor="middle" fill="#e6e9f0" font-size="12">${v.toFixed(1)}</text>`;
-}
-Promise.all([q("quant_scores?symbol=eq." + sym + "&order=as_of.asc&limit=400"),
-             q("backtest_results?symbol=in.(" + sym + ",ALL)&order=kind.asc,horizon.asc,symbol.asc"),
-             q("asset_levels?symbol=eq." + sym + "&order=as_of.desc&limit=1")]).then(([h, b, lv]) => {
-  el("t").textContent = sym;
-  levels(Array.isArray(lv) && lv.length ? lv[0] : null);
-  if (!Array.isArray(h) || !h.length) { el("d").textContent = "No data for this symbol yet."; return; }
-  const L = h[h.length - 1], sc = +L.score;
-  el("d").textContent = "Score " + sc.toFixed(1) + " | gate x" + L.gate + " | coverage " + L.coverage + "% | COT " + L.cot_regime + " | " + L.as_of;
-  gauge(sc); summ(L);
-  el("c").innerHTML = Object.keys(W).map(k => {
-    const v = L.components ? L.components[k] : null;
-    const bar = v == null ? "" : `<i style="left:${v < 0 ? 50 + v * 50 : 50}%;width:${Math.abs(v) * 50}%;background:${col(v)}"></i>`;
-    return `<div class="row"><span class="lab">${k} (${W[k]}%)</span><div class="bar">${bar}</div><span class="v">${v == null ? "-" : v.toFixed(2)}</span></div>`;
-  }).join("");
-  if (h.length < 2) { el("hn").textContent = "History builds up one point per day. Check back soon."; }
-  else {
-    const n = h.length, X = i => 5 + i / (n - 1) * 290, Y = v => 60 - Math.max(-100, Math.min(100, v)) / 100 * 55;
-    el("h").innerHTML = `<line x1="0" x2="300" y1="60" y2="60" stroke="#555963" stroke-dasharray="3"/><polyline fill="none" stroke="#4f8cff" stroke-width="2" points="${h.map((r, i) => X(i) + "," + Y(+r.score)).join(" ")}"/>`;
-    el("hn").textContent = h[0].as_of + " to " + L.as_of + " (" + n + " days)";
-  }
-  const nm = {forward: "Live scores", trend_hist: "Trend-only history"};
-  el("b").innerHTML = (Array.isArray(b) && b.length)
-    ? "<tr><th>Check</th><th>Asset</th><th>Days</th><th>n</th><th>Hit %</th><th>Avg %</th><th>Base %</th></tr>" +
-      b.map(x => `<tr><td>${nm[x.kind] || x.kind}</td><td>${x.symbol}</td><td>${x.horizon}</td><td>${x.n}</td><td>${x.hit_rate}</td><td>${x.avg_ret}</td><td>${x.base_rate == null ? "-" : x.base_rate}</td></tr>`).join("")
-    : "<tr><td>No checks yet. They appear after the next workflow run.</td></tr>";
-}).catch(() => { el("t").textContent = "Could not load data"; });
-</script></body></html>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Asset - EdgeScore</title><link rel="stylesheet" href="app.css">
+<style>.two{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}.cr{display:flex;align-items:center;padding:6px 0;border-bottom:1px solid var(--b)}.cr span{width:98px}.cr b{width:54px;text-align:right}.bar{flex:1;height:10px;background:#1e293b;position:relative;border-radius:5px;margin:0 8px}.bar i{position:absolute;top:0;height:100%;border-radius:5px}.lv{width:100%;border-collapse:collapse}.lv td{padding:6px 0;border-bottom:1px solid var(--b)}.lv td+td{text-align:right}svg{display:block;width:100%;touch-action:pan-y}.chip{cursor:pointer}</style></head><body>
+<div id="hdr"></div><main>
+<a href="screener.html">&larr; Screener</a>
+<h1 id="ttl">Loading...</h1><div class="sub" id="sub"></div>
+<div class="grid" id="kp"></div>
+<div class="card"><h2>Summary</h2><div id="sm"></div></div>
+<div class="card"><h2>Price <span class="chip" data-n="63">3M</span> <span class="chip" data-n="126">6M</span> <span class="chip" data-n="260">1Y</span></h2><div id="pc"></div></div>
+<div class="two"><div class="card"><h2>Score</h2><svg id="gg" viewBox="0 0 200 118"></svg></div><div class="card"><h2>Components</h2><div id="cp"></div></div></div>
+<div class="two"><div class="card"><h2>Levels</h2><div id="lv"></div></div><div class="card"><h2>Score history</h2><div id="sh"></div></div></div>
+<div class="card"><h2>Model checks</h2><div id="bt"></div><div class="sub">Hit % = share of signals that moved the right way. Base % = share of all periods that rose. Small samples prove little.</div></div>
+</main><script src="app.js?v=2"></script><script src="chart.js?v=2"></script><script src="asset2.js?v=2"></script><script src="asset.js?v=2"></script></body></html>
