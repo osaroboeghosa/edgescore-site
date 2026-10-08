@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EdgeScore</title>
+<style>body{margin:0;padding:16px;background:#0a0e1f;color:#e5e7eb;font:14px/1.45 system-ui,sans-serif;max-width:720px}h1{font-size:26px;margin:6px 0 2px}.s{color:#8b93a7;font-size:12px}a{color:#818cf8;text-decoration:none}.card{background:#11162b;border:1px solid #1f2740;border-radius:10px;padding:12px;margin:12px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.grid a{display:block;background:#161d3a;border:1px solid #2a3350;border-radius:8px;padding:12px;text-align:center;color:#e5e7eb}.grid a b{display:block;margin-bottom:2px}.grid a span{font-size:11px;color:#8b93a7}.row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1f2740}.g{color:#22c55e}.r{color:#ef4444}.big{font-size:24px;font-weight:700}.d{border:1px solid #7f1d1d;background:#1f1013;border-radius:8px;padding:10px;font-size:12px;color:#fca5a5;margin-top:14px}</style></head><body>
+<h1>EdgeScore</h1><div class="s">Macro, positioning and technical scoring across 17 markets. Updated each weekday after the US close.</div>
+<div class="card"><b>Today</b><div id="rg" style="margin-top:6px">Loading...</div></div>
+<div class="card"><b>Strongest and weakest (Quant score)</b><div id="tp" style="margin-top:6px">Loading...</div></div>
+<div class="grid">
+<a href="quant.html"><b>Quant Hybrid</b><span>Scores and components</span></a>
+<a href="index.html"><b>Classic Matrix</b><span>18-factor scoring</span></a>
+<a href="markets.html"><b>Markets</b><span>Risk gauge, ATR, carry</span></a>
+<a href="econ.html"><b>Economic Heatmap</b><span>Latest releases</span></a>
+<a href="cot.html"><b>COT History</b><span>Institutional positioning</span></a>
+<a href="charts.html"><b>Macro Charts</b><span>CPI, NFP, PCE and more</span></a>
+</div>
+<div class="d"><b>Not financial advice.</b> EdgeScore is an experimental research tool. Scores are model outputs, have not been validated, and can be wrong. Data comes from third-party sources (CFTC, FRED, Yahoo Finance, community feeds) and may be delayed or incomplete. Trading carries a risk of loss. Do your own research.</div>
+<script>
+const U='https://lveqwyasscpwslqvitbt.supabase.co',$=i=>document.getElementById(i);
+(async()=>{try{
+const h=await (await fetch('quant.html')).text();const m=h.match(/sb_publishable_[A-Za-z0-9_-]+/);
+if(!m)throw new Error('key not found');const H={apikey:m[0]};
+const get=async p=>{const r=await (await fetch(U+'/rest/v1/'+p,{headers:H})).json();if(!Array.isArray(r))throw new Error(JSON.stringify(r));return r};
+const [g,q]=await Promise.all([get('risk_gauge?select=*&order=as_of.desc&limit=1'),get('quant_latest?select=symbol,score&order=score.desc')]);
+if(g[0]){const x=g[0];$('rg').innerHTML='<span class="big '+(x.score>0?'g':x.score<0?'r':'')+'">'+(x.score>0?'+':'')+x.score+'</span> '+x.regime+' <span class="s">(risk gauge, '+x.as_of+')</span>'}else $('rg').textContent='No data yet';
+const row=r=>'<div class="row"><a href="asset.html?symbol='+r.symbol+'">'+r.symbol+'</a><span class="'+(r.score>0?'g':'r')+'">'+Number(r.score).toFixed(1)+'</span></div>';
+$('tp').innerHTML=q.slice(0,3).map(row).join('')+'<div class="s" style="padding:4px 0">...</div>'+q.slice(-3).map(row).join('')
+}catch(e){$('rg').textContent='Error: '+e.message}})();
+</script></body></html>
