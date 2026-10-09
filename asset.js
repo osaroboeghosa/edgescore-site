@@ -1,5 +1,5 @@
 shell();
-let W;
+var W;
 const SY=(new URLSearchParams(location.search).get('symbol')||'EURUSD').toUpperCase().replace(/[^A-Z0-9]/g,''),
 OW={carry:27,esi:18,pmi:18,vix:9,cot:9,retail:19},
 V={fx:{trend:30,carry:20,macro:20,cot:10,retail:8,risk:7,season:5},index:{trend:35,macro:25,cot:10,risk:10,rates:7,retail:8,season:5},pre:{trend:35,real:25,dollar:12,cot:10,retail:8,risk:5,season:5},cu:{trend:35,macro:25,cot:10,risk:10,retail:8,season:7,dollar:5}},
