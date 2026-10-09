@@ -1,19 +1,8 @@
 shell();
-const CL={EURUSD:'Forex',GBPUSD:'Forex',AUDUSD:'Forex',NZDUSD:'Forex',USDJPY:'Forex',USDCAD:'Forex',USDCHF:'Forex',NIKKEI:'Indices',NASDAQ:'Indices',DOW:'Indices',DAX:'Indices',SPX500:'Indices',UK100:'Indices',GOLD:'Commodities',SILVER:'Commodities',PLATINUM:'Commodities',COPPER:'Commodities'};
-const qb=s=>s>=20?'Bullish':s>=5?'Mild bullish':s<=-20?'Bearish':s<=-5?'Mild bearish':'Neutral';
-const cc=k=>({k:k,t:k[0].toUpperCase()+k.slice(1),v:x=>x[k]==null?-99:x[k],f:x=>sgn(x[k],2),c:x=>cls(x[k])});
-const ic=(k,t)=>({k:k,t:t,f:x=>sgn(x[k],0),c:x=>cls(x[k])});
-const tc=x=>x.tr==='Bullish'?'pos':x.tr==='Bearish'?'neg':'mut';
-const MAC=['gdp','mpmi','spmi','retail','cnsmr','cpi','ppi','pce','rates','nfp','unemp','claims','adp','jolts'];
-const S0={k:'s',t:'Symbol',f:x=>'<b>'+x.s+'</b>'},S1={k:'cl',t:'Class',c:()=>'mut'},TR={k:'tr',t:'Trend',c:tc},VO={k:'vol',t:'Volatility'};
-const QC=[S0,S1,{k:'sc',t:'Score',f:x=>sgn(x.sc),c:x=>cls(x.sc)},{k:'b',t:'Bias',v:x=>x.sc,f:x=>qb(x.sc),c:x=>x.sc>=5?'pos':x.sc<=-5?'neg':'mut'},TR,VO,cc('carry'),cc('esi'),cc('pmi'),cc('vix'),cc('cot'),cc('retail'),{k:'cv',t:'Coverage',f:x=>num(x.cv,0)+'%',c:()=>'mut'}];
-const CC=[S0,S1,ic('sc','Score'),{k:'bias',t:'Bias',c:x=>/Bull/.test(x.bias)?'pos':/Bear/.test(x.bias)?'neg':'mut'},TR,VO,{k:'bull',t:'Bull',c:()=>'pos'},{k:'bear',t:'Bear',c:()=>'neg'},ic('seas','Seas'),ic('cot','COT'),ic('mac','Macro')];
-const NQ='Quant: trend = price vs the 50 and 200-day averages. Volatility = 14-day ATR vs its 100-day average. Component columns run from -1 (bearish) to +1 (bullish). Tap a column to sort, tap a row for the asset page.';
-const NC='Classic: 18 components scored -2 to +2 and summed. Bull and Bear count the components pointing each way. Macro is the sum of the 14 macro components. Tap a column to sort, tap a row for the asset page.';
 let mode='Quant',Q='',F=null,T,QR=[],CR=[],QD='-',CD='-';
 const k=(v,t,c)=>'<div class="kpi"><b class="'+(c||'')+'">'+v+'</b><span>'+t+'</span></div>';
 function draw(){const cq=mode==='Quant',rows=cq?QR:CR,n=rows.length,srt=rows.slice().sort((x,y)=>y.sc-x.sc),th=cq?5:3,d=cq?1:0;
-$('sub').textContent=(cq?'Quant Hybrid scores as of '+QD:'Classic matrix scores as of '+CD)+' | '+n+' markets';
+$('sub').textContent=(cq?'Quant v2 scores as of '+QD:'Classic matrix scores as of '+CD)+' | '+n+' markets';
 $('kp').innerHTML=k(rows.filter(x=>x.sc>=th).length,'Bullish (score +'+th+' or more)','pos')+k(rows.filter(x=>x.sc<=-th).length,'Bearish (score -'+th+' or less)','neg')+k(srt[0].s+' '+sgn(srt[0].sc,d),'Strongest','pos')+k(srt[n-1].s+' '+sgn(srt[n-1].sc,d),'Weakest','neg');
 T=table('t',cq?QC:CC,rows,{sort:'sc',go:s=>location.href=(mode==='Classic'?'classic.html?s=':'asset.html?symbol=')+s});
 T.search(Q);T.filter(F);$('nt').textContent=cq?NQ:NC}
@@ -22,7 +11,7 @@ const [q,a,l,t]=await Promise.all([api('quant_latest?select=*'),api('atr_heat?se
 const A={},L={};a.forEach(x=>{if(!A[x.symbol])A[x.symbol]=x});l.forEach(x=>{if(!L[x.symbol])L[x.symbol]=x});
 const tv=s=>(L[s]||{}).sma_signal||'-',vv=s=>(A[s]||{}).state||'-';
 QD=q[0]?q[0].as_of:'-';CD=t[0]?String(t[0].as_of).slice(0,10):'-';
-QR=q.map(x=>{const c=x.components||{};return{s:x.symbol,cl:CL[x.symbol]||'Other',sc:+x.score,tr:tv(x.symbol),vol:vv(x.symbol),carry:c.carry,esi:c.esi,pmi:c.pmi,vix:c.vix,cot:c.cot,retail:c.retail,cv:+x.coverage}});
+QR=q.map(x=>{const c=x.components||{};return{s:x.symbol,cl:CL[x.symbol]||'Other',sc:+x.score,tr:tv(x.symbol),vol:vv(x.symbol),trend:c.trend,macro:c.macro,carry:c.carry,cot:c.cot,retail:c.retail,risk:c.risk,season:c.season,rates:c.rates,real:c.real,dollar:c.dollar,cv:+x.coverage}});
 CR=t.map(x=>{let c=x.components;if(typeof c==='string'){try{c=JSON.parse(c)}catch(e){c={}}}c=c||{};const g=z=>+c[z]||0,v=Object.keys(c).map(z=>+c[z]||0);return{s:x.symbol,cl:CL[x.symbol]||'Other',sc:+x.score,bias:x.bias,tr:tv(x.symbol),vol:vv(x.symbol),bull:v.filter(z=>z>0).length,bear:v.filter(z=>z<0).length,seas:g('seasonality'),cot:g('cot'),mac:MAC.reduce((s,z)=>s+g(z),0)}});
 $('md').innerHTML=['Quant','Classic'].map((c,i)=>'<span class="chip'+(i?'':' on')+'">'+c+'</span>').join(' ');
 document.querySelectorAll('#md .chip').forEach(e=>e.onclick=()=>{document.querySelectorAll('#md .chip').forEach(z=>z.classList.remove('on'));e.classList.add('on');mode=e.textContent;draw()});
