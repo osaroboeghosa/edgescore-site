@@ -1,0 +1,11 @@
+const CL={EURUSD:'Forex',GBPUSD:'Forex',AUDUSD:'Forex',NZDUSD:'Forex',USDJPY:'Forex',USDCAD:'Forex',USDCHF:'Forex',NIKKEI:'Indices',NASDAQ:'Indices',DOW:'Indices',DAX:'Indices',SPX500:'Indices',UK100:'Indices',GOLD:'Commodities',SILVER:'Commodities',PLATINUM:'Commodities',COPPER:'Commodities'};
+const qb=s=>s>=20?'Bullish':s>=5?'Mild bullish':s<=-20?'Bearish':s<=-5?'Mild bearish':'Neutral';
+const cc=(k,t)=>({k:k,t:t||k[0].toUpperCase()+k.slice(1),v:x=>x[k]==null?-99:x[k],f:x=>sgn(x[k],2),c:x=>cls(x[k])});
+const ic=(k,t)=>({k:k,t:t,f:x=>sgn(x[k],0),c:x=>cls(x[k])});
+const tc=x=>x.tr==='Bullish'?'pos':x.tr==='Bearish'?'neg':'mut';
+const MAC=['gdp','mpmi','spmi','retail','cnsmr','cpi','ppi','pce','rates','nfp','unemp','claims','adp','jolts'];
+const S0={k:'s',t:'Symbol',f:x=>'<b>'+x.s+'</b>'},S1={k:'cl',t:'Class',c:()=>'mut'},TR={k:'tr',t:'Trend',c:tc},VO={k:'vol',t:'Volatility'};
+const QC=[S0,S1,{k:'sc',t:'Score',f:x=>sgn(x.sc),c:x=>cls(x.sc)},{k:'b',t:'Bias',v:x=>x.sc,f:x=>qb(x.sc),c:x=>x.sc>=5?'pos':x.sc<=-5?'neg':'mut'},TR,VO,cc('trend','Mom'),cc('macro'),cc('carry'),cc('cot'),cc('retail'),cc('risk'),cc('season'),cc('rates'),cc('real'),cc('dollar'),{k:'cv',t:'Coverage',f:x=>num(x.cv,0)+'%',c:()=>'mut'}];
+const CC=[S0,S1,ic('sc','Score'),{k:'bias',t:'Bias',c:x=>/Bull/.test(x.bias)?'pos':/Bear/.test(x.bias)?'neg':'mut'},TR,VO,{k:'bull',t:'Bull',c:()=>'pos'},{k:'bear',t:'Bear',c:()=>'neg'},ic('seas','Seas'),ic('cot','COT'),ic('mac','Macro')];
+const NQ='Quant v2: Mom = blend of 1/3/6/12-month trend scaled by volatility. Trend column = price vs the 50 and 200-day averages. Components run from -1 (bearish) to +1 (bullish); blank means no data. Coverage = share of model weight with data. Tap a column to sort, tap a row for the asset page.';
+const NC='Classic: 18 components scored -2 to +2 and summed. Bull and Bear count the components pointing each way. Macro is the sum of the 14 macro components. Tap a column to sort, tap a row for the asset page.';
