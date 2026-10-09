@@ -12,7 +12,7 @@ function table(id,cols,rows,o){o=o||{};let sk=o.sort,asc=!!o.asc,q='',fl=null;co
 function draw(){let r=rows.filter(x=>!q||String(x[cols[0].k]).toLowerCase().includes(q));
 if(fl)r=r.filter(fl);
 if(sk){const c=cols.find(c=>c.k===sk);r=r.slice().sort((a,b)=>{const x=c.v?c.v(a):a[sk],y=c.v?c.v(b):b[sk];return(x>y?1:x<y?-1:0)*(asc?1:-1)})}
-let hg='';if(cols.some(c=>c.g)){const gl=[];let p=null;cols.forEach(c=>{const g=c.g||'';if(p&&p.g===g)p.n++;else{p={g:g,n:1};gl.push(p)}});hg='<tr>'+gl.map(z=>'<th colspan="'+z.n+'" style="text-align:center;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#2dd4bf;border-bottom:1px solid #243049;cursor:default">'+z.g+'</th>').join('')+'</tr>'}
+let hg='';if(cols.some(c=>c.g)){const gl=[];let p=null;cols.forEach(c=>{const g=c.g||'';if(p&&p.g===g)p.n++;else{p={g:g,n:1};gl.push(p)}});hg='<tr>'+gl.map(z=>'<th colspan="'+z.n+'" style="position:static;text-align:center;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#2dd4bf;border-bottom:1px solid #243049;border-left:1px solid #243049;cursor:default">'+z.g+'</th>').join('')+'</tr>'}
 el.innerHTML='<table>'+hg+'<tr>'+cols.map(c=>'<th data-k="'+c.k+'">'+c.t+(sk===c.k?(asc?' ▲':' ▼'):'')+'</th>').join('')+'</tr>'+r.map(x=>'<tr data-r="'+x[cols[0].k]+'"'+(o.go?' style="cursor:pointer"':'')+'>'+cols.map(c=>{const v=c.v?c.v(x):x[c.k];return'<td class="'+(c.c?c.c(x):'')+'">'+(c.f?c.f(x):v)+'</td>'}).join('')+'</tr>').join('')+'</table>';
 el.querySelectorAll('th[data-k]').forEach(h=>h.onclick=()=>{const k=h.dataset.k;if(sk===k)asc=!asc;else{sk=k;asc=false}draw()});
 if(o.go)el.querySelectorAll('tr[data-r]').forEach(t=>t.onclick=()=>o.go(t.dataset.r))}
